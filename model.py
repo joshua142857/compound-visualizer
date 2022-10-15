@@ -17,33 +17,34 @@ def spheres(size, clr, xd, yd, zd):
     trace.update(showscale=False)
 
     return trace
+
+
+def spherecloud(size, xd, yd, zd):
+    X, Y, Z = np.mgrid[-10:10:40j, -10:10:40j, -10:10:40j]
+    values = np.multiply(size,
+        np.sqrt(np.power(X-xd, 2) + np.power(Y-yd, 2) + np.power(Z-zd, 2)))
+    cloud = go.Volume(
+        x=X.flatten(),
+        y=Y.flatten(),
+        z=Z.flatten(),
+        value=values.flatten(),
+        isomin=0,
+        isomax=3,
+        opacity=0.1,  # needs to be small to see through all surfaces
+        surface_count=15  # needs to be a large number for good volume rendering
+    )
+    return cloud
+
+
 def annot(x, y, z, txt, xancr='center'):
-    string=dict(showarrow=False, x=x, y=y, z=z, text=txt, xanchor=xancr, font=dict(color='white',size=12))
+    string = dict(showarrow=False, x=x, y=y, z=z, text=txt, xanchor=xancr, font=dict(color='white', size=12))
     return string
 
-spherelist = []
-dictionary = {"hydrogen" : [1,2,3,2], "hydrogen1" : [.5,1,2,-1]}
-print(dictionary)
+
+renderlist = []
+dictionary = {"hydrogen": [.5, 2, 3, 2], "hydrogen1": [.5, 1, 2, -1]}
 for key, val in dictionary.items():
-    spherelist.append(spheres(val[0], '#ff0000', val[1], val[2], val[3]))
-print(spherelist)
-
-fig = go.Figure(data=spherelist)
-
+    renderlist.append(spheres(val[0], '#000000', val[1], val[2], val[3]))
+    renderlist.append(spherecloud(val[0] * 3, val[1], val[2], val[3]))
+fig = go.Figure(data=renderlist)
 fig.show()
-
-
-# X, Y, Z = np.mgrid[-10:10:40j, -10:10:40j, -10:10:40j]
-# values = np.sqrt(np.power(X, 2) + np.power(Y, 2) + np.power(Z, 2))
-# values += np.sqrt(np.power(X+1, 2) + np.power(Y+1, 2) + np.power(Z+1, 2))
-# fig = go.Figure(data=go.Volume(
-#     x=X.flatten(),
-#     y=Y.flatten(),
-#     z=Z.flatten(),
-#     value=values.flatten(),
-#     isomin=0,
-#     isomax=10,
-#     opacity=0.1,  # needs to be small to see through all surfaces
-#     surface_count=20,  # needs to be a large number for good volume rendering
-#     ))
-# fig.show()
