@@ -51,6 +51,8 @@ for atom in atoms:
         if atom.element == key:
             atom.electrons = value
 
+atomsforjosh = {i: atoms[i] for i in range(len(atoms))}
+
 def findDistance(atom1,atom2):
     x1 = atom1.x
     x2 = atom2.x
