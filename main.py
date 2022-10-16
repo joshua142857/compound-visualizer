@@ -2,8 +2,7 @@ import numpy as np
 import plotly.graph_objects as go
 import pubchempy as pcp
 import math
-
-name = "methane"
+from flask import Flask, redirect, url_for, request
 
 
 class atomR:
@@ -17,9 +16,6 @@ class atomR:
         self.electrons = electrons
         self.color = color
 
-
-# name = input("What is the name of the compound? ")
-name = "methane"
 
 def aaron(name):
     # name = input("What is the name of the compound? ")
@@ -153,11 +149,11 @@ def findForce(comp):
 
 
 def spheres(size, clr, xd, yd, zd):
-    theta = np.linspace(0, 2 * np.pi, 100)
-    phi = np.linspace(0, np.pi, 100)
+    theta = np.linspace(0, 2 * np.pi, 80)
+    phi = np.linspace(0, np.pi, 80)
     x0 = xd + size * np.outer(np.cos(theta), np.sin(phi))
     y0 = yd + size * np.outer(np.sin(theta), np.sin(phi))
-    z0 = zd + size * np.outer(np.ones(100), np.cos(phi))
+    z0 = zd + size * np.outer(np.ones(80), np.cos(phi))
     trace = go.Surface(x=x0, y=y0, z=z0, colorscale=[[0, clr], [1, clr]])
     trace.update(showscale=False)
     return trace
@@ -172,19 +168,20 @@ def spherecloud(size, xd, yd, zd):
         z=Z.flatten(),
         value=values.flatten(),
         isomin=0,
-        isomax=size ** (1.0 / 4),
-        opacity=0.1,  # needs to be small to see through all surfaces
-        surface_count=15  # needs to be a large number for good volume rendering
+        isomax=size ** .25,
+        opacity=0.1,
+        surface_count=7,
+        showscale=False
     )
     return cloud
 
 
 def bonding(x1, x2, y1, y2, z1, z2):
     trace = go.Streamtube(sizeref=0.1,
-                          x=[0, 1, 0], y=[0, 0, 0], z=[0, 0, 0],
-                          u=[x2 - x1, x2 - x1, x2 - x1],
-                          v=[y2 - y1, y2 - y1, y2 - y1],
-                          w=[z2 - z1, z2 - z1, z2 - z1],
+                          x=[0, 0, 0], y=[0, 0.1, 0], z=[0, 0, 0],
+                          u=[x2 - x1, 1, 1],
+                          v=[y2 - y1, 1, 1],
+                          w=[z2 - z1, 1, 1],
                           starts=dict(
                               x=[x1],
                               y=[y1],
@@ -193,6 +190,22 @@ def bonding(x1, x2, y1, y2, z1, z2):
                           colorscale='gray',
                           showscale=False)
     return trace
+
+def bondcloud(size, xd, yd, zd):
+    X, Y, Z = np.mgrid[-10:10:40j, -10:10:40j, -10:10:40j]
+    values = np.sqrt(np.power(X - xd, 2) + np.power(Y - yd, 2) + np.power(Z - zd, 2))
+    cloud = go.Volume(
+        x=X.flatten(),
+        y=Y.flatten(),
+        z=Z.flatten(),
+        value=values.flatten(),
+        isomin=0,
+        isomax=size,
+        opacity=0.2,
+        surface_count=2,
+        showscale=False
+    )
+    return cloud
 
 
 def render(uatoms, dictionary, bondlist):
@@ -204,11 +217,20 @@ def render(uatoms, dictionary, bondlist):
     for bond in bondlist:
         a1 = dictionary[bond['aid1'] - 1]
         a2 = dictionary[bond['aid2'] - 1]
-        renderlist.append(bonding(k * a1.x, k * a2.x, k * a1.y, k * a2.y, k * a1.z, k * a2.z))
-
+        # renderlist.append(bonding(k * a1.x, k * a2.x, k * a1.y, k * a2.y, k * a1.z, k * a2.z))
+        renderlist.append(bondcloud((2*a1.electrons**(.25) + a2.electrons**(.25))/6,
+                                    a1.x*k + (a2.x - a1.x)*k/3,
+                                    a1.y*k + (a2.y - a1.y)*k/3,
+                                    a1.z*k + (a2.z - a1.z)*k/3)
+                          )
+        renderlist.append(bondcloud((a1.electrons**(.25) + 2*a2.electrons**(.25))/6,
+                                    a1.x*k + (a2.x - a1.x) * 2*k / 3,
+                                    a1.y*k + (a2.y - a1.y) * 2*k / 3,
+                                    a1.z*k + (a2.z - a1.z) * 2*k / 3)
+                          )
     fig = go.Figure(data=renderlist)
-    fig.show()
-    # return fig.write_html("compound.html")
+    # fig.show()
+    return fig.write_html("compound.html")
 
 
 def run(name):
@@ -217,5 +239,59 @@ def run(name):
     bonds, apoints = josh(name)
     return render(uatoms, apoints, bonds)
 
+app = Flask(__name__)
 
-run(name)
+@app.route('/')
+def home():
+    return HOME_HTML
+
+
+HOME_HTML = """ <html>
+<body>
+<h1> Welcome to Orgo Structure Finder</h1>
+<h2> What is molecular orbital theory combined with valence shell electron pair repulsion(VSEPR)? </h2>
+When Schrodinger introduced the concept which electrons existed as waves of probable location, rather than precise
+location, models of atomic bonding must be reimagined. Previous models used the electronegativities of 
+atoms which make up a structure to determine which atoms had a greater affinity for electrons and therefore 
+pulled electrons towards it. However to combine these ideas, models reimagine individual electrons within the model as
+clouds, or areas of probable location of such electron.<br><br>
+
+For example. given compound made up of 2 elements A,linked to each other, and a more electronegative element B, linked
+ to one of the As. Element B would attract more electrons, due to it being more electronegative; therefore, electrons
+ would have a greater possibility to be found near B rather than any of the As and the neighboring A would have a less
+ than normal likliehood of electrons surroudning it. Therefore the cloud of B being larger, also causes A to be smaller.
+ However, there is a distance factor as well. The A element less far away would experience less of the B's
+ pull. Therefore the A furthest from B has a larger electron cloud than the A closest to A.<br><br>
+
+ These ideas may be hard to visualize on your own. Using pubchem's database we have created a open ended program
+ which allows for one to model the electron clouds around atoms of any organic compound, given the name of 
+ the chemical. 
+ <br><br>
+
+<form action  = "/main">
+   Input Chemical Name = <input type = 'text' name = 'formula'><br>
+   <input type='submit' value='Continue'>
+</form>
+</body>
+"""
+
+
+@app.route('/main')
+def main():
+    x = request.args.get('formula')
+    run(x)
+    return MAIN_HTML.format(x)
+
+MAIN_HTML = """
+<html>
+<body>
+<h1>
+Window(s) opened containing diagrams<br> To view, navigate away from window
+</h1>
+</script>
+<body>
+</html>
+"""
+
+if __name__ == '__main__':
+    app.run(host="localhost", debug=True)
