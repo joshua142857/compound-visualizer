@@ -5,9 +5,8 @@ import math
 
 name = "methane"
 
-
 class atomR:
-    def __init__(self, aid, element, charge, x, y, z, electrons):
+    def __init__(self, aid, element, charge, x, y, z, electrons, color):
         self.aid = aid
         self.element = element
         self.charge = charge
@@ -15,6 +14,7 @@ class atomR:
         self.y = y
         self.z = z
         self.electrons = electrons
+        self.color = color
 
 
 name = input("What is the name of the compound? ")
@@ -23,11 +23,7 @@ name = input("What is the name of the compound? ")
 def aaron(name):
     # name = input("What is the name of the compound? ")
     results = pcp.get_compounds(name, 'name', record_type='3d')
-    try:
-        compound = results[0]
-    except IndexError:
-        print("Invalid Compound")
-        return None
+    compound = results[0]
 
     dictoflistsofdicts = compound.to_dict(properties=['atoms', 'bonds'])
     atomslistofdicts = dictoflistsofdicts["atoms"]
@@ -50,9 +46,19 @@ def aaron(name):
         'P': 5,
         'S': 6
     }
+
+    color_dict = {
+        'C': "#000000",  # black
+        'H': "#ffffff",  # white
+        'O': "#ff0000",  # red
+        'N': "#0000ff",  # blue
+        'P': "#7f007f",  # purple
+        'S': "#ffff00"  # yellow
+    }
+
     atoms = []
     for atom in atomslistofdicts:
-        atoms.append(atomR(atom['aid'], atom['element'], 0, atom['x'], atom['y'], atom['z'], 0))
+        atoms.append(atomR(atom['aid'], atom['element'], 0, atom['x'], atom['y'], atom['z'], 0, ""))
 
     for atom in atoms:
         for i, (key, value) in enumerate(charge_dict.items()):
@@ -61,6 +67,9 @@ def aaron(name):
         for i, (key, value) in enumerate(electrons_dict.items()):
             if atom.element == key:
                 atom.electrons = value
+        for i, (key, value) in enumerate(color_dict.items()):
+            if atom.element == key:
+                atom.color = value
     return atoms
 
 
@@ -90,9 +99,19 @@ def josh(name):
         'P': 5,
         'S': 6
     }
+
+    color_dict = {
+        'C': "#000000",  # black
+        'H': "#ffffff",  # white
+        'O': "#ff0000",  # red
+        'N': "#0000ff",  # blue
+        'P': "#7f007f",  # purple
+        'S': "#ffff00"  # yellow
+    }
+
     atoms = []
     for atom in atomslistofdicts:
-        atoms.append(atomR(atom['aid'], atom['element'], 0, atom['x'], atom['y'], atom['z'], 0))
+        atoms.append(atomR(atom['aid'], atom['element'], 0, atom['x'], atom['y'], atom['z'], 0, ""))
 
     for atom in atoms:
         for i, (key, value) in enumerate(charge_dict.items()):
@@ -101,6 +120,9 @@ def josh(name):
         for i, (key, value) in enumerate(electrons_dict.items()):
             if atom.element == key:
                 atom.electrons = value
+        for i, (key, value) in enumerate(color_dict.items()):
+            if atom.element == key:
+                atom.color = value
     atomsforjosh = {i: atoms[i] for i in range(len(atoms))}
     return bondslistofdicts, atomsforjosh
 
@@ -129,6 +151,7 @@ def findForce(comp):
     return comp
 
 
+
 def spheres(size, clr, xd, yd, zd):
     theta = np.linspace(0, 2 * np.pi, 100)
     phi = np.linspace(0, np.pi, 100)
@@ -141,16 +164,15 @@ def spheres(size, clr, xd, yd, zd):
 
 
 def spherecloud(size, xd, yd, zd):
-    X, Y, Z = np.mgrid[-10:100:400j, -10:10:40j, -10:10:40j]
-    values = np.multiply(size,
-             np.sqrt(np.power(X - xd, 2) + np.power(Y - yd, 2) + np.power(Z - zd, 2)))
+    X, Y, Z = np.mgrid[-10:10:40j, -10:10:40j, -10:10:40j]
+    values = np.sqrt(np.power(X - xd, 2) + np.power(Y - yd, 2) + np.power(Z - zd, 2))
     cloud = go.Volume(
         x=X.flatten(),
         y=Y.flatten(),
         z=Z.flatten(),
         value=values.flatten(),
         isomin=0,
-        isomax=3,
+        isomax=size,
         opacity=0.1,  # needs to be small to see through all surfaces
         surface_count=15  # needs to be a large number for good volume rendering
     )
@@ -158,8 +180,8 @@ def spherecloud(size, xd, yd, zd):
 
 
 def bonding(x1, x2, y1, y2, z1, z2):
-    trace = go.Streamtube(sizeref=0.75,
-                          x=[0, x1, x1], y=[y1, 0, y1], z=[z1, z1, 0],
+    trace = go.Streamtube(sizeref=0.1,
+                          x=[x1, 0, 0], y=[0, y1, 0], z=[0, 0, z1],
                           u=[x2 - x1, x2 - x1, x2 - x1],
                           v=[y2 - y1, y2 - y1, y2 - y1],
                           w=[z2 - z1, z2 - z1, z2 - z1])
@@ -168,14 +190,14 @@ def bonding(x1, x2, y1, y2, z1, z2):
 
 def render(uatoms, dictionary, bondlist):
     renderlist = []
+    k = 4
     for atom in uatoms:
-        renderlist.append(spheres(0.5, '#000000', atom.x, atom.y, atom.z))
-        renderlist.append(spherecloud(atom.electrons / 5, atom.x, atom.y, atom.z))
+        renderlist.append(spheres(.2, atom.color, k*atom.x, k*atom.y, k*atom.z))
+        renderlist.append(spherecloud(atom.electrons, k*atom.x, k*atom.y, k*atom.z))
+        print(atom.electrons)
     for bond in bondlist:
-        print(dictionary)
         a1 = dictionary[bond['aid1'] - 1]
         a2 = dictionary[bond['aid2'] - 1]
-        print(a2.x)
         renderlist.append(bonding(a1.x, a2.x, a1.y, a2.y, a1.z, a2.z))
 
     fig = go.Figure(data=renderlist)
