@@ -1,5 +1,5 @@
 import pubchempy as pcp
-from cmath import sqrt
+
 import math
 
 
@@ -61,25 +61,20 @@ def findDistance(atom1,atom2):
     distance = math.sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)
     return distance
 
-pullConstant = 1
-def pull(distance,parentCharge,childCharge):
-    if distance != 0:
-        return pullConstant*parentCharge*childCharge/distance**2
-    else:
-        return 1
+def findForce(comp):
+    for parent in comp:
+        lst = []
+        for child in comp:
+            if parent != child:
+                lst.append(child)
+        sum = 0
+        for i in lst:
+            sum += (1/findDistance(i,parent)**2*abs(i.charge-parent.charge) )/2
+        parent.electrons *= sum
 
-
-def determineForce(Comp):
-    for parent in (Comp):
-        for child in Comp:
-            if parent.charge >= child.charge:
-                parent.electrons *= pull(findDistance(parent,child),parent.charge,child.charge)
-                child.electrons /= pull(findDistance(parent,child),parent.charge,child.charge)
-            else:
-                child.electrons *= pull(findDistance(parent,child),parent.charge,child.charge)
-                parent.electrons /= pull(findDistance(parent,child),parent.charge,child.charge)
-
-
+findForce(atoms)
+for i in atoms:
+    print(i.electrons, i.element)
 
 
 
