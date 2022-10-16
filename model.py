@@ -1,5 +1,7 @@
 import numpy as np
 import plotly.graph_objects as go
+import process
+from process import atomR
 
 
 def spheres(size, clr, xd, yd, zd):
@@ -31,8 +33,11 @@ def spherecloud(size, xd, yd, zd):
 
 
 def bonding(x1, x2, y1, y2, z1, z2):
-    trace = go.Streamtube(x=[0, 0, 0], y=[0, 1, 0], z=[0, 0, 0],
-                          u=[x1, x1, x1], v=[0, 0, 0], w=[0, 0, 0])
+    trace = go.Streamtube(sizeref=0.75,
+                          x=[0, x1, x1], y=[y1, 0, y1], z=[z1, z1, 0],
+                          u=[x2 - x1, x2 - x1, x2 - x1],
+                          v=[y2 - y1, y2 - y1, y2 - y1],
+                          w=[z2 - z1, z2 - z1, z2 - z1])
     return trace
 
 
@@ -41,16 +46,17 @@ def annot(x, y, z, txt, xancr='center'):
     return string
 
 
-renderlist = []
-dictionary = {1: [.5, 2, 3, 2], 2: [.5, 1, 2, -1]}
-for key, val in dictionary.items():
-    renderlist.append(spheres(val[0], '#000000', val[1], val[2], val[3]))
-    renderlist.append(spherecloud(val[0] * 3, val[1], val[2], val[3]))
-bondlist = [{'aid1': 1, 'aid2': 2, 'order': 1}]
-for bond in bondlist:
-    a1 = dictionary.get(bond.get('aid1'))
-    a2 = dictionary.get(bond.get('aid2'))
-    renderlist.append(bonding(a1[1], a2[1], a1[2], a2[2], a1[3], a2[3]))
+def render(cloudsizes, bondslistofdicts, atomsforjosh):
+    renderlist = []
+    dictionary = {1: [.5, 2, 3, 2], 2: [.5, 1, 2, -1]}
+    for key, val in dictionary.items():
+        renderlist.append(spheres(val[0], '#000000', val[1], val[2], val[3]))
+        renderlist.append(spherecloud(val[0] * 3, val[1], val[2], val[3]))
+    bondlist = [{'aid1': 1, 'aid2': 2, 'order': 1}]
+    for bond in bondlist:
+        a1 = dictionary.get(bond.get('aid1'))
+        a2 = dictionary.get(bond.get('aid2'))
+        renderlist.append(bonding(a1[1], a2[1], a1[2], a2[2], a1[3], a2[3]))
 
-fig = go.Figure(data=renderlist)
-fig.show()
+    fig = go.Figure(data=renderlist)
+    return fig.write_html("compound.html")
