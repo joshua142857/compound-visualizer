@@ -4,7 +4,7 @@ import math
 
 
 class atomR:
-    def __init__(self, aid, element, charge, x, y, z, electrons):
+    def __init__(self, aid, element, charge, x, y, z, electrons, color):
         self.aid = aid
         self.element = element
         self.charge = charge
@@ -12,6 +12,7 @@ class atomR:
         self.y = y
         self.z = z
         self.electrons = electrons
+        self.color = color
 
 
 name = input("What is the name of the compound? ")
@@ -43,9 +44,19 @@ def aaron(name):
         'P': 5,
         'S': 6
     }
+
+    color_dict = {
+        'C': "#000000",  # black
+        'H': "#ffffff",  # white
+        'O': "#ff0000",  # red
+        'N': "#0000ff",  # blue
+        'P': "#7f007f",  # purple
+        'S': "#ffff00"  # yellow
+    }
+
     atoms = []
     for atom in atomslistofdicts:
-        atoms.append(atomR(atom['aid'], atom['element'], 0, atom['x'], atom['y'], atom['z'], 0))
+        atoms.append(atomR(atom['aid'], atom['element'], 0, atom['x'], atom['y'], atom['z'], 0, ""))
 
     for atom in atoms:
         for i, (key, value) in enumerate(charge_dict.items()):
@@ -54,6 +65,9 @@ def aaron(name):
         for i, (key, value) in enumerate(electrons_dict.items()):
             if atom.element == key:
                 atom.electrons = value
+        for i, (key, value) in enumerate(color_dict.items()):
+            if atom.element == key:
+                atom.color = value
     return atoms
 
 
