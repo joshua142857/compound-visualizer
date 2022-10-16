@@ -5,6 +5,7 @@ import math
 
 name = "methane"
 
+
 class atomR:
     def __init__(self, aid, element, charge, x, y, z, electrons, color):
         self.aid = aid
@@ -17,8 +18,8 @@ class atomR:
         self.color = color
 
 
-name = input("What is the name of the compound? ")
-
+# name = input("What is the name of the compound? ")
+name = "methane"
 
 def aaron(name):
     # name = input("What is the name of the compound? ")
@@ -146,10 +147,9 @@ def findForce(comp):
                 lst.append(child)
         sum = 0
         for i in lst:
-            sum += (1 / findDistance(i, parent) ** 2 * abs(i.charge - parent.charge)) / 2
+            sum += (1 / findDistance(i, parent) ** 4 * abs(i.charge - parent.charge)) / 2
         parent.electrons *= sum
     return comp
-
 
 
 def spheres(size, clr, xd, yd, zd):
@@ -172,7 +172,7 @@ def spherecloud(size, xd, yd, zd):
         z=Z.flatten(),
         value=values.flatten(),
         isomin=0,
-        isomax=size,
+        isomax=size ** (1.0 / 4),
         opacity=0.1,  # needs to be small to see through all surfaces
         surface_count=15  # needs to be a large number for good volume rendering
     )
@@ -181,24 +181,30 @@ def spherecloud(size, xd, yd, zd):
 
 def bonding(x1, x2, y1, y2, z1, z2):
     trace = go.Streamtube(sizeref=0.1,
-                          x=[x1, 0, 0], y=[0, y1, 0], z=[0, 0, z1],
+                          x=[0, 1, 0], y=[0, 0, 0], z=[0, 0, 0],
                           u=[x2 - x1, x2 - x1, x2 - x1],
                           v=[y2 - y1, y2 - y1, y2 - y1],
-                          w=[z2 - z1, z2 - z1, z2 - z1])
+                          w=[z2 - z1, z2 - z1, z2 - z1],
+                          starts=dict(
+                              x=[x1],
+                              y=[y1],
+                              z=[z1]
+                          ),
+                          colorscale='gray',
+                          showscale=False)
     return trace
 
 
 def render(uatoms, dictionary, bondlist):
     renderlist = []
-    k = 4
+    k = 2
     for atom in uatoms:
-        renderlist.append(spheres(.2, atom.color, k*atom.x, k*atom.y, k*atom.z))
-        renderlist.append(spherecloud(atom.electrons, k*atom.x, k*atom.y, k*atom.z))
-        print(atom.electrons)
+        renderlist.append(spheres(.2, atom.color, k * atom.x, k * atom.y, k * atom.z))
+        renderlist.append(spherecloud(atom.electrons, k * atom.x, k * atom.y, k * atom.z))
     for bond in bondlist:
         a1 = dictionary[bond['aid1'] - 1]
         a2 = dictionary[bond['aid2'] - 1]
-        renderlist.append(bonding(a1.x, a2.x, a1.y, a2.y, a1.z, a2.z))
+        renderlist.append(bonding(k * a1.x, k * a2.x, k * a1.y, k * a2.y, k * a1.z, k * a2.z))
 
     fig = go.Figure(data=renderlist)
     fig.show()
