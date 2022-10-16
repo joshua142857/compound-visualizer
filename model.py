@@ -1,6 +1,6 @@
 import numpy as np
 import plotly.graph_objects as go
-
+from process.py import charge_dict
 
 def spheres(size, clr, xd, yd, zd):
     theta = np.linspace(0, 2 * np.pi, 100)
@@ -11,7 +11,6 @@ def spheres(size, clr, xd, yd, zd):
     trace = go.Surface(x=x0, y=y0, z=z0, colorscale=[[0, clr], [1, clr]])
     trace.update(showscale=False)
     return trace
-
 
 def spherecloud(size, xd, yd, zd):
     X, Y, Z = np.mgrid[-10:10:40j, -10:10:40j, -10:10:40j]
