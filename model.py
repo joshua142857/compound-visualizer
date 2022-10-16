@@ -31,8 +31,11 @@ def spherecloud(size, xd, yd, zd):
 
 
 def bonding(x1, x2, y1, y2, z1, z2):
-    trace = go.Streamtube(x=[0, 0, 0], y=[0, 1, 0], z=[0, 0, 0],
-                          u=[x1, x1, x1], v=[0, 0, 0], w=[0, 0, 0])
+    trace = go.Streamtube(sizeref=0.75,
+                          x=[x1, x1, 0], y=[y1, y1, 0], z=[z1, z1, 0],
+                          u=[x2 - x1, x2 - x1, x2 - x1],
+                          v=[y2 - y1, y2 - y1, y2 - y1],
+                          w=[z2 - z1, z2 - z1, z2 - z1])
     return trace
 
 
