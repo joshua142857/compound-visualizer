@@ -191,6 +191,7 @@ def bonding(x1, x2, y1, y2, z1, z2):
                           showscale=False)
     return trace
 
+
 def bondcloud(size, xd, yd, zd):
     X, Y, Z = np.mgrid[-10:10:40j, -10:10:40j, -10:10:40j]
     values = np.sqrt(np.power(X - xd, 2) + np.power(Y - yd, 2) + np.power(Z - zd, 2))
@@ -208,7 +209,8 @@ def bondcloud(size, xd, yd, zd):
     return cloud
 
 
-def render(uatoms, dictionary, bondlist):
+
+def render(uatoms, dictionary, bondlist, name):
     renderlist = []
     k = 2
     for atom in uatoms:
@@ -218,18 +220,37 @@ def render(uatoms, dictionary, bondlist):
         a1 = dictionary[bond['aid1'] - 1]
         a2 = dictionary[bond['aid2'] - 1]
         # renderlist.append(bonding(k * a1.x, k * a2.x, k * a1.y, k * a2.y, k * a1.z, k * a2.z))
-        renderlist.append(bondcloud((2*a1.electrons**(.25) + a2.electrons**(.25))/6,
-                                    a1.x*k + (a2.x - a1.x)*k/3,
-                                    a1.y*k + (a2.y - a1.y)*k/3,
-                                    a1.z*k + (a2.z - a1.z)*k/3)
+        renderlist.append(bondcloud((2 * a1.electrons ** (.25) + a2.electrons ** (.25)) / 6,
+                                    a1.x * k + (a2.x - a1.x) * k / 3,
+                                    a1.y * k + (a2.y - a1.y) * k / 3,
+                                    a1.z * k + (a2.z - a1.z) * k / 3)
                           )
-        renderlist.append(bondcloud((a1.electrons**(.25) + 2*a2.electrons**(.25))/6,
-                                    a1.x*k + (a2.x - a1.x) * 2*k / 3,
-                                    a1.y*k + (a2.y - a1.y) * 2*k / 3,
-                                    a1.z*k + (a2.z - a1.z) * 2*k / 3)
+        renderlist.append(bondcloud((a1.electrons ** (.25) + 2 * a2.electrons ** (.25)) / 6,
+                                    a1.x * k + (a2.x - a1.x) * 2 * k / 3,
+                                    a1.y * k + (a2.y - a1.y) * 2 * k / 3,
+                                    a1.z * k + (a2.z - a1.z) * 2 * k / 3)
                           )
-    fig = go.Figure(data=renderlist)
-    # fig.show()
+    layout = go.Layout(title=name, showlegend=False, margin=dict(l=0, r=0, t=0, b=0),
+                       scene=dict(xaxis=dict(title='',
+                                             range=[-10, 10],
+                                             backgroundcolor='white',
+                                             color='white',
+                                             gridcolor='white'),
+                                  yaxis=dict(title='',
+                                             range=[-10, 10],
+                                             backgroundcolor='white',
+                                             color='white',
+                                             gridcolor='white'
+                                             ),
+                                  zaxis=dict(title='',
+                                             range=[-10, 10],
+                                             backgroundcolor='white',
+                                             color='white',
+                                             gridcolor='white'
+                                             )
+                                  ))
+    fig = go.Figure(data=renderlist, layout=layout)
+    fig.show()
     return fig.write_html("compound.html")
 
 
@@ -237,9 +258,11 @@ def run(name):
     atoms = aaron(name)
     uatoms = findForce(atoms)
     bonds, apoints = josh(name)
-    return render(uatoms, apoints, bonds)
+    return render(uatoms, apoints, bonds, name)
+
 
 app = Flask(__name__)
+
 
 @app.route('/')
 def home():
@@ -256,14 +279,14 @@ atoms which make up a structure to determine which atoms had a greater affinity 
 pulled electrons towards it. However to combine these ideas, models reimagine individual electrons within the model as
 clouds, or areas of probable location of such electron.<br><br>
 
-For example. given compound made up of 2 elements A,linked to each other, and a more electronegative element B, linked
- to one of the As. Element B would attract more electrons, due to it being more electronegative; therefore, electrons
+For example, given a compound made up of 2 elements A, linked to each other, and a more electronegative element B, linked
+ to one of the As, element B would attract more electrons, due to it being more electronegative; therefore, electrons
  would have a greater possibility to be found near B rather than any of the As and the neighboring A would have a less
- than normal likliehood of electrons surroudning it. Therefore the cloud of B being larger, also causes A to be smaller.
+ than normal likelihood of electrons surrounding it. Therefore the cloud of B being larger, also causes A to be smaller.
  However, there is a distance factor as well. The A element less far away would experience less of the B's
  pull. Therefore the A furthest from B has a larger electron cloud than the A closest to A.<br><br>
 
- These ideas may be hard to visualize on your own. Using pubchem's database we have created a open ended program
+ These ideas may be hard to visualize on your own. Using pubChem's database we have created a open ended program
  which allows for one to model the electron clouds around atoms of any organic compound, given the name of 
  the chemical. 
  <br><br>
@@ -281,6 +304,7 @@ def main():
     x = request.args.get('formula')
     run(x)
     return MAIN_HTML.format(x)
+
 
 MAIN_HTML = """
 <html>
