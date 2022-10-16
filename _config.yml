@@ -5,4 +5,6 @@ plugins:
 title: [3-D Structures of Organic Compounds]
 description: [This website shows our Hackathon project which takes organic compounds and displays them in three dimensional form.]
 
-{% include mycomponent.html %}
+<body>
+    <a href="about/about.html">About our project</a>
+</body>
