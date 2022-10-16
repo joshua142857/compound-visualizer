@@ -1,5 +1,4 @@
 import pubchempy as pcp
-
 import math
 
 
@@ -122,6 +121,7 @@ def findDistance(atom1, atom2):
     distance = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2)
     return distance
 
+
 def findForce(comp):
     for parent in comp:
         lst = []
@@ -130,10 +130,6 @@ def findForce(comp):
                 lst.append(child)
         sum = 0
         for i in lst:
-            sum += (1/findDistance(i,parent)**2*abs(i.charge-parent.charge) )/2
+            sum += (1 / findDistance(i, parent) ** 2 * abs(i.charge - parent.charge)) / 2
         parent.electrons *= sum
-
-
-
-
-
+    return comp

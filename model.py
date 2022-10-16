@@ -1,7 +1,5 @@
 import numpy as np
 import plotly.graph_objects as go
-import process
-from process import atomR
 
 
 def spheres(size, clr, xd, yd, zd):
@@ -46,13 +44,11 @@ def annot(x, y, z, txt, xancr='center'):
     return string
 
 
-def render(cloudsizes, bondslistofdicts, atomsforjosh):
+def render(uatoms, dictionary, bondlist):
     renderlist = []
-    dictionary = {1: [.5, 2, 3, 2], 2: [.5, 1, 2, -1]}
-    for key, val in dictionary.items():
+    for key, val in uatoms.items():
         renderlist.append(spheres(val[0], '#000000', val[1], val[2], val[3]))
         renderlist.append(spherecloud(val[0] * 3, val[1], val[2], val[3]))
-    bondlist = [{'aid1': 1, 'aid2': 2, 'order': 1}]
     for bond in bondlist:
         a1 = dictionary.get(bond.get('aid1'))
         a2 = dictionary.get(bond.get('aid2'))
