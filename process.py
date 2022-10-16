@@ -119,9 +119,6 @@ def findForce(comp):
             sum += (1/findDistance(i,parent)**2*abs(i.charge-parent.charge) )/2
         parent.electrons *= sum
 
-findForce(atoms)
-for i in atoms:
-    print(i.electrons, i.element)
 
 
 
